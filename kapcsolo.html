@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<title>Kapcsolótábla szimuláció</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+background:linear-gradient(#e8eef5,#cfd8e3);
+}
+
+#controls{
+margin:15px;
+}
+
+input{
+width:60px;
+padding:5px;
+margin:5px;
+text-align:center;
+}
+
+button{
+padding:10px 18px;
+margin:5px;
+font-size:15px;
+border:none;
+border-radius:6px;
+background:#2c7be5;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#1a5fb4;
+}
+
+#board{
+display:grid;
+gap:12px;
+justify-content:center;
+margin-top:20px;
+}
+
+.cell{
+width:60px;
+height:60px;
+border-radius:50%;
+cursor:pointer;
+border:2px solid #444;
+}
+
+.off{
+background:radial-gradient(circle at 30% 30%, #777, #333);
+}
+
+.on{
+background:radial-gradient(circle at 30% 30%, #fff176, #fbc02d);
+box-shadow:0 0 15px #ffd600;
+}
+
+#matrix{
+margin-top:30px;
+font-family:monospace;
+font-size:18px;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Kapcsolótábla szimuláció</h1>
+
+<div id="controls">
+
+Sorok
+<input id="rowsInput" type="number" value="6" min="1" max="20">
+
+Oszlopok
+<input id="colsInput" type="number" value="6" min="1" max="20">
+
+<button onclick="buildBoard()">Tábla létrehozása</button>
+
+<br>
+
+<button onclick="newGame()">Új játék</button>
+<button onclick="randomBoard()">Véletlen állapot</button>
+<button onclick="toggleTeacher()">Tanári mód</button>
+
+</div>
+
+<div>
+Lépések száma: <span id="steps">0</span>
+</div>
+
+<div id="board"></div>
+
+<div id="matrix"></div>
+
+<script>
+
+let rows=6;
+let cols=6;
+
+let board=[];
+let startBoard=[];
+let steps=0;
+
+let teacherMode=false;
+
+const boardDiv=document.getElementById("board");
+const matrixDiv=document.getElementById("matrix");
+const stepsDisplay=document.getElementById("steps");
+
+function buildBoard(){
+
+rows=parseInt(rowsInput.value);
+cols=parseInt(colsInput.value);
+
+boardDiv.style.gridTemplateColumns=`repeat(${cols},60px)`;
+
+board=[];
+boardDiv.innerHTML="";
+
+for(let r=0;r<rows;r++){
+
+board[r]=[];
+
+for(let c=0;c<cols;c++){
+
+board[r][c]=false;
+
+let cell=document.createElement("div");
+cell.className="cell off";
+
+cell.dataset.row=r;
+cell.dataset.col=c;
+
+cell.onclick=()=>pressButton(r,c);
+
+boardDiv.appendChild(cell);
+
+}
+}
+
+steps=0;
+stepsDisplay.textContent=steps;
+
+saveStartBoard();
+updateDisplay();
+}
+
+function pressButton(row,col){
+
+steps++;
+stepsDisplay.textContent=steps;
+
+for(let c=0;c<cols;c++){
+toggle(row,c);
+}
+
+for(let r=0;r<rows;r++){
+if(r!==row) toggle(r,col);
+}
+
+updateDisplay();
+}
+
+function toggle(r,c){
+board[r][c]=!board[r][c];
+}
+
+function updateDisplay(){
+
+let cells=document.getElementsByClassName("cell");
+
+for(let cell of cells){
+
+let r=cell.dataset.row;
+let c=cell.dataset.col;
+
+if(board[r][c]){
+cell.classList.add("on");
+cell.classList.remove("off");
+}else{
+cell.classList.add("off");
+cell.classList.remove("on");
+}
+}
+
+if(teacherMode) updateMatrix();
+}
+
+function updateMatrix(){
+
+let text="";
+
+for(let r=0;r<rows;r++){
+
+for(let c=0;c<cols;c++){
+
+text += board[r][c] ? "1 " : "0 ";
+
+}
+
+text+="<br>";
+}
+
+matrixDiv.innerHTML=text;
+}
+
+function toggleTeacher(){
+
+teacherMode=!teacherMode;
+
+matrixDiv.style.display = teacherMode ? "block" : "none";
+
+updateMatrix();
+}
+
+function newGame(){
+
+steps=0;
+stepsDisplay.textContent=steps;
+
+for(let r=0;r<rows;r++){
+for(let c=0;c<cols;c++){
+board[r][c]=false;
+}
+}
+
+saveStartBoard();
+updateDisplay();
+}
+
+function resetBoard(){
+
+steps=0;
+stepsDisplay.textContent=steps;
+
+for(let r=0;r<rows;r++){
+for(let c=0;c<cols;c++){
+board[r][c]=startBoard[r][c];
+}
+}
+
+updateDisplay();
+}
+
+function randomBoard(){
+
+steps=0;
+stepsDisplay.textContent=steps;
+
+for(let r=0;r<rows;r++){
+for(let c=0;c<cols;c++){
+board[r][c]=Math.random()<0.5;
+}
+}
+
+saveStartBoard();
+updateDisplay();
+}
+
+function saveStartBoard(){
+
+startBoard=[];
+
+for(let r=0;r<rows;r++){
+
+startBoard[r]=[];
+
+for(let c=0;c<cols;c++){
+
+startBoard[r][c]=board[r][c];
+
+}
+
+}
+}
+
+buildBoard();
+
+</script>
+
+</body>
+</html>
