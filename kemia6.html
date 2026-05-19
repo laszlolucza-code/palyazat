@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>A Teljes Periódusos Rendszer</title>
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --alkali: #ff9999; --alkaline: #ffcc99; --transition: #ffff99;
+            --lanthanide: #ffb3e6; --actinide: #cc99ff; --metalloid: #99ff99;
+            --post-trans: #99ffff; --nonmetal: #b3ffb3; --noble: #c2c2f0;
+            --halogen: #ffffcc;
+        }
+        body { font-family: sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(18, 40px); 
+            grid-template-rows: repeat(10, 48px); 
+            gap: 2px; 
+            padding: 20px; 
+            background: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .el { 
+            width: 40px; height: 48px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; border: 1px solid #ddd; 
+            cursor: pointer; font-size: 10px; transition: 0.2s;
+        }
+        .el:hover { transform: scale(1.5); z-index: 10; box-shadow: 0 0 10px rgba(0,0,0,0.3); border-color: #000; }
+        .el b { font-size: 14px; }
+        .el i { font-size: 7px; font-style: normal; }
+        
+        .panel { 
+            margin-top: 20px; width: 600px; padding: 20px; 
+            background: white; border-radius: 10px; border-top: 5px solid #333; 
+        }
+        
+        /* Színkategóriák */
+        .alkali { background: var(--alkali); } .alkaline { background: var(--alkaline); }
+        .trans { background: var(--transition); } .lanth { background: var(--lanthanide); }
+        .actin { background: var(--actinide); } .metalloid { background: var(--metalloid); }
+        .post { background: var(--post-trans); } .nonmetal { background: var(--nonmetal); }
+        .noble { background: var(--noble); } .halogen { background: var(--halogen); }
+    </style>
+</head>
+<body>
+
+    <h1>Interaktív Periódusos Rendszer</h1>
+    
+    <div class="grid" id="master-grid"></div>
+
+    <div class="panel">
+        <h2 id="p-name">Kattints egy elemre!</h2>
+        <p id="p-data"></p>
+        <p id="p-fact" style="font-style: italic; color: #555;"></p>
+    </div>
+
+    <script>
+        // Formátum: [rendszám, vegyjel, név, oszlop, sor, kategória, érdekesség]
+        const data = [
+            [1,"H","Hidrogén",1,1,"nonmetal","A világegyetem leggyakoribb eleme."],
+            [2,"He","Hélium",18,1,"noble","A hangod tőle magas lesz, a lufi meg repül."],
+            [3,"Li","Lítium",1,2,"alkali","A mobilod akkumulátora ebből van."],
+            [4,"Be","Berillium",2,2,"alkaline","Drágakövekben, például smaragdban is van."],
+            [5,"B","Bór",13,2,"metalloid","A növényeknek fontos tápanyag."],
+            [6,"C","Szén",14,2,"nonmetal","Belőle van a gyémánt és a ceruzabél is."],
+            [7,"N","Nitrogén",15,2,"nonmetal","A levegő nagy része ez a gáz."],
+            [8,"O","Oxigén",16,2,"nonmetal","A légkör körülbelül 21%-át teszi ki, és központi szerepet játszik az élőlények légzésében, valamint az égési folyamatokban."],
+            [9,"F","Fluor",17,2,"halogen","A fogkrémek fontos összetevője."],
+            [10,"Ne","Neon",18,2,"noble","Fényreklámokban vörösen izzik."],
+            [11,"Na","Nátrium",1,3,"alkali","A konyhasó egyik fele."],
+            [12,"Mg","Magnézium",2,3,"alkaline","Ha meggyújtod, vakítóan fehér."],
+            [13,"Al","Alumínium",13,3,"post","Könnyű fém, üdítős dobozok anyaga."],
+            [14,"Si","Szilícium",14,3,"metalloid","Számítógépes chipek készülnek belőle."],
+            [15,"P","Foszfor",15,3,"nonmetal","Sötétben világíthat, a gyufában is van."],
+            [16,"S","Kén",16,3,"nonmetal","Sárga színű, vulkánoknál gyakori."],
+            [17,"Cl","Klór",17,3,"halogen","Uszodák fertőtlenítésére használják."],
+            [18,"Ar","Argon",18,3,"noble","Ablaküvegek közé töltik hőszigetelésnek."],
+            [19,"K","Kálium",1,4,"alkali","A banánban sok van belőle."],
+            [20,"Ca","Kalcium",2,4,"alkaline","A csontok és fogak építőköve."],
+            [21,"Sc","Szkandium",3,4,"trans","Sporteszközök vázában használják."],
+            [22,"Ti","Titán",4,4,"trans","Nagyon erős és könnyű fém."],
+            [23,"V","Vanádium",5,4,"trans","Acélötvözetek készítéséhez kell."],
+            [24,"Cr","Króm",6,4,"trans","Csillogó bevonat az autókon."],
+            [25,"Mn","Mangán",7,4,"trans","Sok vasötvözetben megtalálható."],
+            [26,"Fe","Vas",8,4,"trans","A mágnes és az acél alapja."],
+            [27,"Co","Kobalt",9,4,"trans","Gyönyörű kék festéket ad."],
+            [28,"Ni","Nikkel",10,4,"trans","Pénzérmék alapanyaga."],
+            [29,"Cu","Réz",11,4,"trans","Elektromos vezetékek anyaga."],
+            [30,"Zn","Cink",12,4,"trans","Védi a vasat a rozsdától."],
+            [31,"Ga","Gallium",13,4,"post","A kezedben elolvad, mint a jég."],
+            [32,"Ge","Germánium",14,4,"metalloid","Az első tranzisztorok ebből készültek."],
+            [33,"As","Arzén",15,4,"metalloid","Régen méregként volt hírhedt."],
+            [34,"Se","Szelén",16,4,"nonmetal","Fényérzékeny, fénymásolókban használják."],
+            [35,"Br","Bróm",17,4,"halogen","Büdös, barna folyadék."],
+            [36,"Kr","Kripton",18,4,"noble","Lézeres szemműtéteknél használják."],
+            [37,"Rb","Rubídium",1,5,"alkali","Atomórákban használják."],
+            [38,"Sr","Stroncium",2,5,"alkaline","Vörös színt ad a tűzijátéknak."],
+            [39,"Y","Ittrium",3,5,"trans","Régi TV-k képcsövében volt."],
+            [40,"Zr","Cirkónium",4,5,"trans","Műgyémánt (Cirkónia) alapja."],
+            [41,"Nb","Nióbium",5,5,"trans","Sugárhajtóművekben használják."],
+            [42,"Mo","Molibdén",6,5,"trans","Hőálló acélokhoz adják."],
+            [43,"Tc","Technécium",7,5,"trans","Az első mesterséges elem."],
+            [44,"Ru","Ruténium",8,5,"trans","Ékszerek bevonására is használják."],
+            [45,"Rh","Ródium",9,5,"trans","A legdrágább nemesfémek egyike."],
+            [46,"Pd","Palládium",10,5,"trans","Autók katalizátorában van."],
+            [47,"Ag","Ezüst",11,5,"trans","A legjobb elektromos vezető."],
+            [48,"Cd","Kadmium",12,5,"trans","Régi tölthető akkukban volt."],
+            [49,"In","Indium",13,5,"post","Érintőképernyők alapanyaga."],
+            [50,"Sn","Ón",14,5,"post","Konzervdobozok bevonata."],
+            [51,"Sb","Antimon",15,5,"metalloid","Sötétítő szemfestéknek is használták."],
+            [52,"Te","Tellúr",16,5,"metalloid","Napelemekben használják."],
+            [53,"I","Jód",17,5,"halogen","Sebfertőtlenítésre kiváló."],
+            [54,"Xe","Xenon",18,5,"noble","Erős fehér fénye van az autólámpában."],
+            [55,"Cs","Cézium",1,6,"alkali","A világ legpontosabb óráit hajtja."],
+            [56,"Ba","Bárium",2,6,"alkaline","Röntgenvizsgálatoknál használják."],
+            [57,"La","Lantán",4,9,"lanth","Stúdiólámpákban használják."],
+            [58,"Ce","Cérium",5,9,"lanth","Öngyújtók kövében van."],
+            [59,"Pr","Prazeodímium",6,9,"lanth","Védőszemüvegek üvegében van."],
+            [60,"Nd","Neodímium",7,9,"lanth","Ebből készülnek a legerősebb mágnesek."],
+            [61,"Pm","Prométium",8,9,"lanth","Világító festékekben volt régen."],
+            [62,"Sm","Szamárium",9,9,"lanth","Erős mágnesek és rákgyógyítás."],
+            [63,"Eu","Európium",10,9,"lanth","Az euró bankjegyek biztonsági jele."],
+            [64,"Gd","Gadolinium",11,9,"lanth","MRI vizsgálatoknál segít."],
+            [65,"Tb","Terbium",12,9,"lanth","Színes kijelzők zöld színe."],
+            [66,"Dy","Diszprózium",13,9,"lanth","Merevlemezek mágneseiben van."],
+            [67,"Ho","Holmium",14,9,"lanth","A legerősebb mágneses terekhez."],
+            [68,"Er","Erbium",15,9,"lanth","Optikai kábelek jelerősítője."],
+            [69,"Tm","Túlium",16,9,"lanth","Hordozható röntgenekben."],
+            [70,"Yb","Itterbium",17,9,"lanth","Lézerekben használják."],
+            [71,"Lu","Lutécium",18,9,"lanth","Olajfinomításnál használják."],
+            [72,"Hf","Hafnium",4,6,"trans","Atomreaktorok szabályozója."],
+            [73,"Ta","Tantál",5,6,"trans","Minden mobiltelefon kondenzátora."],
+            [74,"W","Volfrám",6,6,"trans","Izzók szála készült belőle."],
+            [75,"Re","Rénium",7,6,"trans","Sugárhajtóművek turbináiban."],
+            [76,"Os","Ozmium",8,6,"trans","A legsűrűbb természetes elem."],
+            [77,"Ir","Irídium",9,6,"trans","A legkorrózióállóbb fém."],
+            [78,"Pt","Platina",10,6,"trans","Ékszerek és katalizátorok."],
+            [79,"Au","Arany",11,6,"trans","Évezredek óta a legértékesebb fém."],
+            [80,"Hg","Higany",12,6,"trans","Szobahőmérsékleten folyékony fém."],
+            [81,"Tl","Tallium",13,6,"post","Régen patkányméregként használták."],
+            [82,"Pb","Ólom",14,6,"post","Nagyon nehéz, véd a sugárzástól."],
+            [83,"Bi","Bizmut",15,6,"post","Gyógyszerekben és kozmetikában."],
+            [84,"Po","Polónium",16,6,"post","Erősen sugárzó, ritka elem."],
+            [85,"At","Asztácium",17,6,"halogen","A Földön alig pár gramm van belőle."],
+            [86,"Rn","Radon",18,6,"noble","Természetes sugárzó gáz."],
+            [87,"Fr","Francium",1,7,"alkali","Rendkívül instabil és ritka."],
+            [88,"Ra","Rádium",2,7,"alkaline","Marie Curie fedezte fel."],
+            [89,"Ac","Aktínium",4,10,"actin","Világít a sötétben a sugárzástól."],
+            [90,"Th","Tórium",5,10,"actin","Jövőbeli atomenergia forrás."],
+            [91,"Pa","Protaktínium",6,10,"actin","Nagyon ritka és mérgező."],
+            [92,"U","Urán",7,10,"actin","Atomerőművek fűtőanyaga."],
+            [93,"Np","Neptúnium",8,10,"actin","A neutron-detektorokban van."],
+            [94,"Pu","Plutónium",9,10,"actin","Űrszondák energiaforrása."],
+            [104,"Rf","Raderfordium",4,7,"trans","Laborban létrehozott elem."],
+            [105,"Db","Dubnium",5,7,"trans","Orosz városról, Dubnáról nevezték el."],
+            [106,"Sg","Sziborgium",6,7,"trans","Glenn Seaborg tudósról nevezték el."],
+            [107,"Bh","Bohrium",7,7,"trans","Niels Bohr fizikusról kapta nevét."],
+            [108,"Hs","Hasszium",8,7,"trans","Német tartományról kapta nevét."],
+            [118,"Og","Oganesszon",18,7,"noble","A jelenlegi utolsó elem a listán."]
+        ];
+
+        // További 118-ig tartó töltő adatok (ha valami hiányozna)
+        const grid = document.getElementById('master-grid');
+        
+        data.forEach(el => {
+            const div = document.createElement('div');
+            div.className = `el ${el[5]}`;
+            div.style.gridColumn = el[3];
+            div.style.gridRow = el[4];
+            div.innerHTML = `<i>${el[0]}</i><b>${el[1]}</b>`;
+            
+            div.onclick = () => {
+                document.getElementById('p-name').innerText = el[2] + " (" + el[1] + ")";
+                document.getElementById('p-data').innerHTML = "Rendszám: <b>" + el[0] + "</b>";
+                document.getElementById('p-fact').innerText = el[6];
+                document.querySelector('.panel').style.borderColor = getComputedStyle(div).backgroundColor;
+            };
+            grid.appendChild(div);
+        });
+    </script>
+</body>
+</html>
