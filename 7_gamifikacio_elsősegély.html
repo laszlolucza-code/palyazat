@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elsősegély kihívás – Gyakorló Kvíz</title>
+    <style>
+        :root {
+            --primary: #e63946;
+            --primary-hover: #c1121f;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2b2d42;
+            --success: #2a9d8f;
+            --error: #e63946;
+            --accent: #f4a261;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f1f3f5;
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin: 0 0 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .level-badge {
+            background-color: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            background-color: #e9ecef;
+            height: 8px;
+            border-radius: 4px;
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--success);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-box {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            margin-bottom: 12px;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 14px 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: var(--card-bg);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+
+        .option-btn:hover:not([disabled]) {
+            border-color: var(--primary);
+            background-color: #fff5f5;
+            transform: translateY(-1px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .option-btn.correct-choice {
+            border-color: var(--success);
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            font-weight: 600;
+        }
+
+        .option-btn.wrong-choice {
+            border-color: var(--error);
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+            display: none;
+        }
+
+        .next-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result-screen {
+            text-align: center;
+            padding: 20px 0;
+            display: none;
+        }
+
+        .result-score {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="game-ui">
+        <header>
+            <h1>🚨 Elsősegély Kvíz 🚨</h1>
+            <div id="level-indicator" class="level-badge">1. Szint: Pulzusfigyelő </div>
+        </header>
+
+        <div class="stats-bar">
+            <div>Kérdés: <span id="current-q-num">1</span> / 50</div>
+            <div>Pontszám: <span id="live-score">0</span> XP</div>
+        </div>
+
+        <div class="progress-container">
+            <div id="p-bar" class="progress-bar"></div>
+        </div>
+
+        <div id="question-text" class="question-box"></div>
+        <ul id="options-container" class="options-list"></ul>
+
+        <div id="feedback" class="feedback-box">
+            <div id="feedback-status" class="feedback-title"></div>
+            <div id="feedback-expl" class="feedback-text"></div>
+        </div>
+
+        <button id="next-button" class="next-btn" onclick="nextQuestion()">Következő kérdés ➡️</button>
+    </div>
+
+    <div id="result-ui" class="result-screen">
+        <h2>🎉 Gratulálunk, teljesítetted! 🎉</h2>
+        <p>Sikeresen végigértél az elsősegély teszten. A végső pontszámod:</p>
+        <div class="result-score"><span id="final-score">0</span> / 50</div>
+        <p id="evaluation-text" style="font-weight: bold; font-size: 18px;"></p>
+        <button class="next-btn" style="display:block; margin-top:30px;" onclick="location.reload()">Újrapróbálom 🔄</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { q: "Mi az első és legfontosabb teendő minden baleseti helyszínen?", a: "b", options: { a: "A sérült azonnali mozgatása", b: "Helyszín biztosítása", c: "Itatni a sérültet", d: "Megvárni, amíg más is odaér", e: "A sérült sebein lévő ruhák letépése" }, exp: "A legfontosabb a saját és a környezet biztonsága, nehogy te magad is sérültté válj!" },
+    { q: "Milyen fektetési módot kell alkalmazni mellkasi sérülés esetén?", a: "c", options: { a: "Stabil oldalfekvés", b: "Sokk-fektetés (lábak megemelve)", c: "Félig ülő helyzet", d: "Hason fekvés", e: "Lapos fektetés, fej megemelése nélkül" }, exp: "A félig ülő helyzet megkönnyíti a tüdő munkáját és a nehézlégzést." },
+    { q: "Mi a teendő, ha a sérült artériás vérzése (lüktető, élénkpiros) van a lábszárán?", a: "a", options: { a: "A láb felemelése, nyomáspont elnyomása és nyomókötés", b: "Sebtisztítás és sebtapasz", c: "Csak fertőtlenítés Betadinnal", d: "Szoros elszorítás a combnál egy gumiszalaggal", e: "Meleg vizes borogatás alkalmazása" }, exp: "Artériás vérzésnél a cél a nyomás fenntartása nyomókötéssel, a teljes elszorítás tilos!" },
+    { q: "Mit jelent a Rautek-féle műfogás?", a: "d", options: { a: "Egy speciális kötözési technika", b: "A vérzés elnyomása az alkaron", c: "A stabil oldalfekvés egyik változata", d: "Kimentési technika a sérült közvetlen életveszélye esetén", e: "A légutak kitisztításának módszere" }, exp: "Gépkocsiból vagy veszélyes helyről való gyors kimentésre szolgáló fogás." },
+    { q: "Mikor NEM szabad alkalmazni a Heimlich-manővert?", a: "e", options: { a: "Felnőtteknél, ha félrenyeltek", b: "Ha a beteg erősen köhög", c: "Eszméletlen állapotban", d: "Idős embereknél", e: "1 éves kor alatti csecsemőknél" }, exp: "Csecsemőknél a belső szervek sérülésének veszélye miatt tilos, náluk a hátbaverés és mellkasi lökés működik." },
+    { q: "Hogyan kell ellátni a koponyaalapi törést (vérzés a fülből/orrból)?", a: "a", options: { a: "Hanyatt fektetés, megemelt fejjel és vállal a vérző oldal felé fordítása", b: "Tamponáljuk el szorosan a fület és az orrot", c: "Ültessük fel a beteget", d: "Ne csináljunk semmit, csak várjuk a mentőt", e: "Azonnal mossuk ki fültisztító pálcikával" }, exp: "A fülből szivárgó vért/folyadékot hagyni kell szabadon kiürülni, betamponálni életveszélyes!" },
+    { q: "Mi a jellemző tünete a ficamnak?", a: "b", options: { a: "A csontok visszatérnek eredeti helyükbe", b: "Az izület rendellenes helyzetű és alakú", c: "Csak egy kis horzsolás látszik", d: "A beteg elájul", e: "A végtag teljesen érzéketlenné válik" }, exp: "Ficam esetén a csontvég elhagyja az ízületi vápát és ott is marad, ami jól látható alakváltozást okoz." },
+    { q: "Mi a teendő gerincsérülés gyanúja esetén?", a: "c", options: { a: "Azonnal emeljük fel és ültessük le", b: "Próbáljuk meg kiegyenesíteni a hátát", c: "Tilos mozgatni, hagyni kell a talált helyzetben", d: "Fordítsuk stabil oldalfekvésbe", e: "Sétáltassuk meg a sérültet, hogy ellenőrizzük a bénulást" }, exp: "A mozgás végleges bénulást okozhat, ezért csak közvetlen életveszély (pl. tűz) esetén mozdítjuk." },
+    { q: "Melyik a sokk-fektetés helyes módja?", a: "d", options: { a: "Félig ülő helyzet", b: "Hason fekvés", c: "Fej megemelése két párnával", d: "Lapos fektetés, az alsó végtagok megemelése", e: "Stabil oldalfekvés, behúzott lábakkal" }, exp: "A lábak megemelésével a vért a létfontosságú szervek (szív, agy) felé irányítjuk." },
+    { q: "Mennyi ideig kell hűteni az égett területet folyóvízzel?", a: "e", options: { a: "1-2 percig", b: "Amíg a mentő meg nem érkezik", c: "Sosem szabad vízzel hűteni", d: "Mindaddig, amíg felhólyagosodik a bőr", e: "Körülbelül 20 percig" }, exp: "Legalább 15-20 perc tartós hideg vizes hűtés kell, hogy megállítsuk a szövetek mélyebb felmelegedését." },
+    { q: "Mi a CO (szén-monoxid) mérgezés elsődleges ellátása?", a: "a", options: { a: "A mérgezettet vigyük tiszta levegőre", b: "Itassunk vele tejet", c: "Adjunk neki fájdalomcsillapítót", d: "Fektessük azonnal hasra", e: "Itassunk vele sok szénsavas vizet" }, exp: "A legfontosabb a gáz belégzésének megszakítása és a friss oxigén biztosítása." },
+    { q: "Mi a teendő, ha a csecsemő félrenyelt egy apró tárgyat?", a: "b", options: { a: "Megrázzuk a lábánál fogva", b: "Combunkra fektetjük és lapockák közé mérünk 5 határozott ütést", c: "Azonnal vizet itatunk vele", d: "Megvárjuk, amíg kiköhögi", e: "Heimlich-manővert alkalmazunk rajta álló helyzetben" }, exp: "A combra fektetett, fejjel lefelé tartott csecsemő hátának ütögetése segít kilökni a tárgyat." },
+    { q: "Milyen kötést alkalmazunk vénás (visszeres) vérzés esetén?", a: "c", options: { a: "Parittyakötést", b: "Sapkakötést", c: "Nyomókötést", d: "Csak egy laza fedőkötést", e: "Szorító kapocskötést" }, exp: "A vénás vérzés folyamatos és sötétvörös, csillapítására a nyomókötés a legalkalmasabb." },
+    { q: "Mi a teendő nyílt alkartörés esetén?", a: "d", options: { a: "A csontot próbáljuk visszanyomni a helyére", b: "Csak egy szoros nyomókötés kell", c: "Meleg vizes borogatás", d: "Sebtisztítás, fertőtlenítés, steril fedőkötés és rögzítés háromszögletű kendővel", e: "Erős sínbe szorítás a csont végénél" }, exp: "A kilógó csontot tilos bántani! Sterilen lefedjük és elmozdulás ellen rögzítjük." },
+    { q: "Mi az infarktus gyanújának jele?", a: "e", options: { a: "Lábzsibbadás", b: "Erős orrvérzés", c: "Hasmenés", d: "Hirtelen látásvesztés az egyik szemre", e: "Szorító mellkasi fájdalom, bal kar zsibbadása, halálfélelem" }, exp: "Ezek a szívizom oxigénhiányának tipikus és riasztó figyelmeztető jelei." },
+    { q: "Mit teszünk egy ájult emberrel, ha 1-2 percen belül nem tér magához?", a: "a", options: { a: "Eszméletlen betegként kezeljük (légzésvizsgálat, stabil oldalfekvés)", b: "Megpofozzuk", c: "Hideg vizet öntünk az arcára", d: "Felállítjuk és sétáltatjuk", e: "Azonnal megkezdjük a mellkaskompressziót légzésvizsgálat nélkül" }, exp: "Ha tartósan nem tér magához, eszméletlen állapotról beszélünk, ahol a légzésbiztosítás a cél." },
+    { q: "Mi a teendő, ha egy gépkocsi kigyullad és sérült van benne?", a: "b", options: { a: "Megvárjuk a tűzoltókat", b: "Rautek-féle műfogással azonnal kimentjük", c: "Megpróbáljuk helyben bekötözni a sebeit", d: "Lefényképezzük a balesetet", e: "Poroltóval megpróbáljuk a sérültet közvetlenül lefújni" }, exp: "A robbanás- és tűzveszély közvetlen életveszély, ilyenkor azonnal menteni kell!" },
+    { q: "Hogyan látunk el egy horzsolt sebet?", a: "c", options: { a: "Semmivel nem szabad hozzányúlni", b: "Hintőporral beszórjuk", c: "Sebtisztítás, fertőtlenítés (pl. Betadine), steril fedőkötés", d: "Tejjel lemossuk", e: "Erős alkohollal közvetlenül a seb nyitott részébe öntve" }, exp: "A szennyeződést mossuk le a környékéről, majd használjunk szövetbarát fertőtlenítőt." },
+    { q: "Milyen fektetési módot használunk hasi sérültnél?", a: "d", options: { a: "Félig ülő helyzet", b: "Hason fekvés", c: "Stabil oldalfekvés", d: "Hanyatt fekvés, lábak térdben felhúzva és alátámasztva", e: "Sokk-fektetés teljesen egyenes lábakkal" }, exp: "A felhúzott térdek ellazítják a hasfalat, ami csökkenti a fájdalmat és a belső nyomást." },
+    { q: "Mi a teendő, ha a sérült fázik és sokkos állapotban van?", a: "e", options: { a: "Adunk neki egy pohár pálinkát", b: "Megitatjuk forró kávéval", c: "Megfuttatjuk, hogy felmelegedjen", d: "Forró vizes palackot teszünk közvetlenül a bőrére", e: "Végtagjait megemeljük és betakarjuk" }, exp: "A sokk-fektetés (lábemelés) javítja a központi keringést. Alkoholt és kávét tilos adni!" },
+    { q: "Mit jelent a 'tálcafogás'?", a: "a", options: { a: "Súlyos sérült (pl. gerincsérült) mozgatása több segítővel", b: "Egyfajta kötözési technika", c: "Az étel beadása a betegnek", d: "A mentők hívásának módja", e: "A kar rögzítése háromszögletű kendővel" }, exp: "4 ember kell hozzá, hogy a sérült testét egy síkban, mereven emeljék fel." },
+    { q: "Szabad-e itatni a hasi sérültet?", a: "b", options: { a: "Igen, sokat kell innia", b: "Tilos száján át bármit adni", c: "Csak szénsavas üdítőt", d: "Csak ha kéri", e: "Csak kis kortyokban, tiszta meleg teát" }, exp: "Műtéti vagy belső vérzési veszély miatt hasi sérültnek és eszméletlennek tilos inni adni!" },
+    { q: "Mi a teendő, ha a sérült füléből vagy orrából híg véres folyadék folyik?", a: "c", options: { a: "Bedugaszoljuk vattával", b: "Sapkakötést teszünk rá", c: "Parittyakötést használunk a vér felfogására, elzárás nélkül", d: "Megkérjük, hogy fújja ki az orrát", e: "Jégkockát teszünk a hallójáratba" }, exp: "Az orrvérzést parittyakötéssel foghatjuk fel, de szorosan elzárni (tamponálni) a járatokat tilos." },
+    { q: "Milyen esetben vesszük le a motoros bukósisakját?", a: "d", options: { a: "Ha a motoros kéri", b: "Ha a mentő megérkezik", c: "Minden esetben, amint odaérünk", d: "Csak ha feltétlenül szükséges (nincs légzés, hányás, erős vérzés)", e: "Ha a sisak láthatóan megrepedt" }, exp: "A sisak levétele gerincsérülésnél veszélyes, csak akkor tesszük meg, ha a légút biztosítása vagy újraélesztés múlik rajta." },
+    { q: "Mi a teendő medencetörés gyanúja esetén?", a: "e", options: { a: "Megpróbáljuk felállítani a beteget", b: "Oldalára fordítjuk", c: "Behúzzuk a lábait a hasához", d: "Nyújtó-húzó mozdulatokkal kiegyenesítjük a csípőt", e: "Talált helyzetben rögzítjük, két oldalról megtámasztjuk" }, exp: "A medencecsont törése súlyos belső vérzést okozhat, ezért szigorúan tilos elmozdítani a talált helyzetből." },
+    { q: "Mit teszünk, ha valaki félrenyelt (felnőtt) és a hátba verés nem segít?", a: "a", options: { a: "Heimlich-manővert alkalmazunk", b: "Megitatjuk vízzel", c: "Lefektetjük a földre", d: "Megvárjuk, amíg elájul", e: "Megpróbálunk ujjal benyúlni a torkába vakon" }, exp: "Ha a hátbaverés hatástalan, a rekeszizom alatti hirtelen nyomással (Heimlich) préseljük ki a levegőt." },
+    { q: "Mi a teendő égési sérülésnél, ha a ruha beleragadt a sebbe?", a: "b", options: { a: "Hirtelen lerántjuk", b: "Nem távolítjuk el, a ruhával együtt hűtjük folyóvízzel", c: "Ollóval kivágjuk a sebből", d: "Bekkenjük olajjal", e: "Alkohollal leöntjük, hogy feloldódjon" }, exp: "A beleragadt ruha letépése komoly bőrsérülést és fertőzést okoz. Mosni és hűteni kell a ruhán keresztül." },
+    { q: "Mit kell közölni a '112-vel' veszélyes anyagot szállító jármű balesetekor?", a: "c", options: { a: "A sofőr nevét", b: "Hogy mi van a rádióban", c: "A narancssárga tábláról leolvasott számokat (ADR számok)", d: "Hogy milyen színű az autó", e: "A szállítmány becsült piaci értékét" }, exp: "A narancssárga ADR táblán lévő számok azonosítják a veszélyes anyagot a mentőegységeknek." },
+    { q: "Hogyan rögzítjük a alkart háromszögletű kendővel?", a: "d", options: { a: "A nyak köré tekerve", b: "Sapkaként a fejre téve", c: "Csak a csuklóra tekerve", d: " Az alkart a kendővel rögzítse fel a nyakba", e: "A hát mögé feszítve" }, exp: "A kendő megtartja az alkart, tehermentesíti a vállat, és megakadályozza a felesleges mozgást." },
+    { q: "Mi a jellemzője az elsőfokú égésnek?", a: "e", options: { a: "Szenesedett szövetek", b: "Égési hólyagok folyadékkal", c: "Nem fáj egyáltalán", d: "A bőr kifehéredése és érzéketlensége", e: "Bőrpír, fájdalom, kisimult felszín" }, exp: "A tipikus napégés is ilyen: a bőr vörös, érzékeny és meleg, de nincsenek még rajta hólyagok." },
+    { q: "Mit csinálunk, ha az autóban eszméletlen embert találunk, de van légzése?", a: "a", options: { a: "Biztosítjuk a légutat (fej hátrahajtása vagy Eschmark-műfogás) az autó ülésében", b: "Kivesszük az autóból", c: "Megvárjuk, amíg felébred", d: "Megitatjuk vízzel", e: "Stabil oldalfekvésbe kényszerítjük az autó hátsó ülésén" }, exp: "Ha stabil a légzése és nincs tűzveszély, az ülésben hagyva hajtjuk hátra a fejét a légutak biztosítására." },
+    { q: "Mi a teendő combcsonttörés esetén?", a: "b", options: { a: "Megpróbáljuk sínbe tenni a lábat", b: "Talált helyzetben rögzítés, két oldalról végig megtámasztás", c: "Felállítjuk és sétáltatjuk a beteget", d: "Erősen masszírozzuk a combját", e: "Szoros elszorítást alkalmazunk a lágyéknál" }, exp: "A combcsont törése hatalmas fájdalommal és belső vérzéssel jár, rögzíteni és támasztani kell mozgatás nélkül." },
+    { q: "Mi a teendő, ha egy kisgyermek 'ugató' jellegű köhögéssel küzd és nehezen kap levegőt?", a: "c", options: { a: "Forró teát adunk neki", b: "Jól betakarjuk paplannal", c: "Hideg levegőre visszük, ablakot nyitunk vagy hűtő elé ültetjük", d: "Futásra ösztönözzük", e: "Mellkasát erősen nyomkodjuk" }, exp: "Ez a krupp jele lehet, ahol a hideg, párás levegő segít lelohasztani a gége nyálkahártyájának duzzanatát." },
+    { q: "Mi a teendő, ha a sebbe idegentest (pl. üvegszilánk) fúródott?", a: "d", options: { a: "Azonnal kihúzzuk", b: "Rányomunk egy erős nyomókötést", c: "Megpróbáljuk kimosni vízzel", d: "Benne hagyjuk, körbepárnázzuk és úgy rögzítjük laza kötéssel", e: "Csipesszel darabokra törjük a sebben" }, exp: "Kihúzni tilos, mert elzárja a vér útját. Körbe kell párnázni, hogy stabilan álljon a kórházig." },
+    { q: "Mit nem szabad tenni fagyási sérülés esetén?", a: "e", options: { a: "Meleg helyre vinni a beteget", b: "Langyos vízbe tenni a végtagot", c: "Meleg teát adni neki", d: "Laza, tiszta fedőkötést alkalmazni", e: "Hóval dörzsölni a sérült, fagyott részt" }, exp: "A hóval dörzsölés fagyott szöveteknél mikroszkopikus sérüléseket és fagyásos romlást okoz." },
+    { q: "Mi a teendő, ha a mentők hívásakor nem tudjuk a pontos címet?", a: "a", options: { a: "Leírjuk a környező tereptárgyakat, kiemelkedő épületeket, kilométerszelvényt", b: "Letesszük a telefont", c: "Megvárjuk, amíg valaki arra jön és megkérdezzük", d: "Hazamegyünk megnézni a térképen", e: "Hangosan kiabálunk a telefonba hátha felismerik a visszhangot" }, exp: "A tereptárgyak, hidak, templomok vagy útmenti számozások alapján a mentésirányító be tudja mérni a helyet." },
+    { q: "Melyik vérzés a legveszélyesebb?", a: "b", options: { a: "Hajszáleres (szivárgó)", b: "Artériás (lüktető, spriccelő, élénkpiros)", c: "Orrvézés", d: "Horzsolásos", e: "Belgyógyászati fogínyvérzés" }, exp: "Az artériás vérzésnél a nagy nyomás miatt percek alatt kritikus mennyiségű vért veszíthet a sérült." },
+    { q: "Mi a teendő, ha a sérültnek a szemébe apró idegen test kerül?", a: "c", options: { a: "Megkérjük, hogy dörzsölje meg", b: "Megpróbáljuk kiszedni az idegentestet egy zsebkendővel", c: "Mindkét szemét lefedjük laza, steril gézlappal", d: "Citromlevet cseppentünk bele", e: "Erős fénnyel világítunk bele közvetlenül" }, exp: "Azért fedjük le mindkét szemet, mert a szemek együtt mozognak: ha a jó szemével nézelődik, a sérült szem is mozogni fog és roncsolódik." },
+    { q: "Mit jelent az 'Eschmark-műfogás'?", a: "d", options: { a: "A láb rögzítése törésnél", b: "A vérzés elállítása a nyakon", c: "A beteg megemelése", d: "A légutak biztosítása az áll előrehúzásával és a fej hátrahajtásával", e: "A gerinc merevítése fektetés közben" }, exp: "A rágóizmok ellazulása miatt hátracsúszó nyelv ellen az áll előreemelésével nyitunk légutat." },
+    { q: "Mikor hívunk mentőt egy balesethez?", a: "e", options: { a: "Csak ha a sérült kéri", b: "Csak ha vérzést látunk", c: "Csak ha elhunyt a sérült", d: "Ha nincs nálunk elsősegélydoboz", e: "Minden olyan esetben, amikor sérülést van." }, exp: "Ha felmerül a gyanúja, hogy orvosi ellátásra vagy szállításra van szükség, azonnal hívni kell a 112-t." },
+    { q: "Mi a teendő, ha a seb nyomókötése átvérzik?", a: "a", options: { a: "A meglévő, átvérzett kötésre ráhelyezünk egy újabb nyomópárnát és azt rögzítjük szorosan", b: "Levesszük a régit és újat teszünk rá", c: "Kicsavarjuk a kötést és visszatesszük", d: "Megvárjuk, amíg magától eláll a vérzés", e: "Szoros gumiszalaggal elszorítjuk a teljes végtagot" }, exp: "A meglévő kötést nem szedjük le, mert letépnénk a már megalvadt véralvadékot. Erre építünk új réteget." },
+    { q: "Hogyan távolítjuk el a ruhát a sérült végtagjairól?", a: "b", options: { a: "Ahogy tudjuk, lerángatjuk", b: "Mindig az ép oldalon kezdjük a vetkőztetést, ha kell, ollóval felvágjuk a ruhát", c: "Csak ha a mentő kéri", d: "Sosem szabad levenni a ruhát", e: "Meleg vízzel leöntjük, hogy leázzon" }, exp: "Az ép oldalon kezdve könnyebben és kevesebb fájdalommal szabadítható fel a sérült testrész." },
+    { q: "Mi a teendő áramütés esetén elsőként?", a: "c", options: { a: "Azonnal megfogjuk a sérültet és elhúzzuk", b: "Vizet öntünk a sérültre", c: "Áramtalanítunk (megszüntetjük az áramkört, lekapcsoljuk a biztosítékot)", d: "Mentőt hívunk és várunk", e: "Megrázzuk a vezetéket egy fém rúddal" }, exp: "Halott vagy sérült segélynyújtó nem tud segíteni. Mindig a saját biztonságod az első!" },
+    { q: "Mi a teendő orrvérzés esetén?", a: "d", options: { a: "Hajtsuk hátra a fejet", b: "Dugjunk vattát az orrba", c: "Fektessük le a beteget", d: "Hajtsuk előre a fejet, és szorítsuk össze az orrszárnyakat néhány percig", e: "Kérjük meg, hogy tüsszentsen egy nagyot" }, exp: "Előrehajtott fejnél a vér kifelé folyik, nem a torkukra, csökkentve a fulladás- és hányásveszélyt." },
+    { q: "Mit kell tenni a sérült végtagon lévő ékszerekkel?", a: "e", options: { a: "Ott kell hagyni őket", b: "Le kell ragasztani őket sebtapasszal", c: "Megvárjuk az értéküket", d: "Jéggel fagyasztjuk őket, hogy összezsugorodjanak", e: "Minél előbb el kell távolítani (gyűrű, óra), mielőtt a végtag bedagadna" }, exp: "A duzzanat miatt a gyűrűk elszoríthatják a vérkeringést, és később már csak levágással távolíthatók el." },
+    { q: "Mi a teendő, ha a sérült NEM lélegzik?", a: "a", options: { a: "Megkezdjük az újraélesztést", b: "Stabil oldalfekvésbe tesszük", c: "Csak várunk a mentőre", d: "Megitatjuk vízzel", e: "Erősen rázni kezdjük a vállainál fogva" }, exp: "Légzés hiányában azonnal meg kell kezdeni a mesterséges keringetést a 30:2-es szabállyal." },
+    { q: "Mi a teendő rándulás esetén?", a: "b", options: { a: "Erősen megmozgatjuk a végtagot", b: "Hideg vizes borogatás, hűtés és a végtag pihentetése, felpolcolása", c: "Meleg vizes borogatás", d: "Megpróbáljuk helyrerakni az ízületet", e: "Vastagon bekenjük melegítő krémmel" }, exp: "A rándult ízületet hűteni és pihentetni kell a duzzanat és a belső bevérzés minimalizálására." },
+    { q: "Hogyan kell megközelíteni egy gázt szivárogtató járművet?", a: "c", options: { a: "Futva, a legrövidebb úton", b: "Széllel szemben", c: "Hátszéllel (a szél fújási irányából), hogy elvigye a gázt tőlünk", d: "Csukott szemmel", e: "A jármű alól kúszva" }, exp: "Mindig a szél irányából (hátszéllel) közelítünk, hogy a szél el fújja tőlünk a mérgező gázfelhőt." },
+    { q: "Mit jelent a 'sapkakötés'?", a: "d", options: { a: "Egy sapkát adunk a betegre", b: "A lábfej bekötése", c: "A fül letakarása", d: "A hajas fejbőr sérüléseinek és vérzéseinek rögzítésére szolgáló speciális kötés", e: "A vállízület rögzítése ficam esetén" }, exp: "Speciális, fejkörkörös rögzítési mód a fejbőr vérzéseinek ellátására." },
+    { q: "Mi a legfontosabb a segélynyújtó számára?", a: "e", options: { a: "Hogy hős legyen", b: "Hogy gyorsan végezzen", c: "Hogy mindenkit meggyógyítson", d: "Hogy rögzítse a történteket a telefonjával", e: "A saját és a környezet biztonságának szavatolása" }, exp: "Halott vagy sérült segélynyújtó nem tud segíteni. Mindig a saját biztonságod az első!" }
+];
+
+let currentIndex = 0;
+let score = 0;
+let hasAnswered = false;
+
+const levels = [
+    { maxQ: 10, name: "🟢 1. Szint: Pulzusfigyelő" },
+    { maxQ: 20, name: "🟡 2. Szint: Sebtapaszok őrzője" },
+    { maxQ: 30, name: "🟠 3. Szint: Alapozó kismentős" },
+    { maxQ: 40, name: "🔴 4. Szint: Vészhelyzeti segítő" },
+    { maxQ: 50, name: "🏆 5. Szint: Elsősegélynyújtó vizsgára majdnem felkészült" }
+];
+
+function updateLevelIndicator() {
+    const currentLevel = levels.find(l => currentIndex < l.maxQ) || levels[levels.length - 1];
+    document.getElementById('level-indicator').innerText = currentLevel.name;
+}
+
+function loadQuestion() {
+    hasAnswered = false;
+    document.getElementById('next-button').style.display = 'none';
+    document.getElementById('feedback').style.display = 'none';
+    updateLevelIndicator();
+
+    const currentQ = questions[currentIndex];
+    document.getElementById('current-q-num').innerText = currentIndex + 1;
+    document.getElementById('question-text').innerText = `${currentIndex + 1}. ${currentQ.q}`;
+
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+
+    const progressPercent = (currentIndex / questions.length) * 100;
+    document.getElementById('p-bar').style.width = `${progressPercent}%`;
+
+    for (const key in currentQ.options) {
+        const li = document.createElement('li');
+        li.className = 'option-item';
+
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = `${key.toUpperCase()}) ${currentQ.options[key]}`;
+        btn.onclick = () => selectAnswer(key, btn);
+
+        li.appendChild(btn);
+        container.appendChild(li);
+    }
+}
+
+function selectAnswer(selectedKey, selectedBtn) {
+    if (hasAnswered) return;
+    hasAnswered = true;
+
+    const currentQ = questions[currentIndex];
+    const correctKey = currentQ.a;
+    const buttons = document.querySelectorAll('.option-btn');
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    const feedbackBox = document.getElementById('feedback');
+    const feedbackStatus = document.getElementById('feedback-status');
+    const feedbackExpl = document.getElementById('feedback-expl');
+
+    if (selectedKey === correctKey) {
+        selectedBtn.classList.add('correct-choice');
+        feedbackStatus.innerText = "✅ Helyes válasz! (+1 XP)";
+        feedbackStatus.style.color = "var(--success)";
+        feedbackBox.style.backgroundColor = "#e8f5e9";
+        score++;
+        document.getElementById('live-score').innerText = score;
+    } else {
+        selectedBtn.classList.add('wrong-choice');
+        feedbackStatus.innerText = "❌ Ezt eltévesztetted!";
+        feedbackStatus.style.color = "var(--error)";
+        feedbackBox.style.backgroundColor = "#ffebee";
+
+        buttons.forEach(btn => {
+            if (btn.innerText.startsWith(correctKey.toUpperCase() + ")")) {
+                btn.classList.add('correct-choice');
+            }
+        });
+    }
+
+    feedbackExpl.innerText = currentQ.exp;
+    feedbackBox.style.display = 'block';
+    document.getElementById('next-button').style.display = 'block';
+}
+
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < questions.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById('game-ui').style.display = 'none';
+    const resultUi = document.getElementById('result-ui');
+    resultUi.style.display = 'block';
+    document.getElementById('final-score').innerText = score;
+
+    const evalText = document.getElementById('evaluation-text');
+    if (score === 50) {
+        evalText.innerText = "Perfect! Te egy igazi elsősegélynyújtó legenda vagy! Minden helyzetben lehet rád számítani! 🥇";
+        evalText.style.color = "var(--success)";
+    } else if (score >= 40) {
+        evalText.innerText = "Kiváló teljesítmény! Nagyszerűen ismered az életmentés szabályait! 🥈";
+        evalText.style.color = "var(--success)";
+    } else if (score >= 30) {
+        evalText.innerText = "Jó lett! Alapvető helyzetekben megállnád a helyed, de érdemes még átnézni a hibákat! 🥉";
+        evalText.style.color = "var(--accent)";
+    } else {
+        evalText.innerText = "Ez most gyengébb lett, de ne csüggedj! Gyakorolj még egy kicsit, mert élesben ez életeket menthet! 🩹";
+        evalText.style.color = "var(--error)";
+    }
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
